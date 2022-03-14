@@ -22,9 +22,9 @@ def walklevel(some_dir, level=1):
             del dirs[:]
 
 outputfile = "osusongs.txt"                                         # file to save the results to
-folder = "C:/Users/mmall/AppData/Local/osu!/Songs"                  # the folder to inventory (replace with your "Songs path")
+folder = input("Enter the full path to your osu! song folder: ")    # the folder to inventory (replace with your "Songs path")
 exclude	= ['.osu','.tmp', '.jpg', '.mp3', '.wav', '.png', '.osb']	# exclude files containing these strings
-pathsep	= "/"                                             		 	# path seperator ('/' for linux, '\' for Windows)
+pathsep	= "\\"                                             		 	# path seperator ('/' for linux, '\' for Windows)
 
 with open(outputfile, "w") as txtfile:
     for path,dirs,files in walklevel(folder, 1):
@@ -38,16 +38,24 @@ with open(outputfile, "w") as txtfile:
 txtfile.close()
 
 playlistids = ""
+count = 0
 with open(outputfile, "r") as file:
     next(file)                                                      # skip first line
     for line in tqdm(file):
+        line = line.replace('[no video]', '')
+        line = line.replace('(TV Size)', '')
         line = line.replace(' ', '')                                # strip spaces from query
-        line = re.sub('[^A-Za-z0-9-]+','', line)                    # strip special chars
-        search_keyword=line
+        line = re.sub('[^A-Za-z0-9-&]+', '', line)                  # strip special chars
+        line = line.lstrip("-")
+        search_keyword = line
         html = urllib.request.urlopen("https://www.youtube.com/results?search_query=" + search_keyword)
         video_ids = re.findall(r"watch\?v=(\S{11})", html.read().decode())
         playlistids = playlistids + video_ids[0] + ","
-        #print("https://www.youtube.com/watch?v=" + video_ids[0])   # individual links
+        count += 1
+        print("https://www.youtube.com/watch?v=" + video_ids[0])    # individual links
+        if (count % 50 == 0):
+            webbrowser.open("https://www.youtube.com/watch_videos?video_ids=" + playlistids)
+            playlistids = ""
 
 playlistids = playlistids.rstrip(",")
 webbrowser.open("https://www.youtube.com/watch_videos?video_ids=" + playlistids)
